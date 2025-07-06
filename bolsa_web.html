@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>BolsaApp</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * { box-sizing: border-box; font-family: Arial, sans-serif; }
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #007bff, #00c6ff);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .container {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      width: 95%;
+      max-width: 1000px;
+      text-align: center;
+    }
+    .tabs { display: flex; margin-bottom: 1rem; }
+    .tab {
+      flex: 1;
+      padding: 0.5rem;
+      cursor: pointer;
+      background: #eee;
+      border-radius: 4px 4px 0 0;
+      font-weight: bold;
+      color: #333;
+    }
+    .tab.active { background: #007bff; color: #fff; }
+
+    .form-section, .dashboard, #admin-panel { display: none; }
+    .form-section.active, .dashboard.active, #admin-panel.active { display: block; }
+
+    label {
+      display: block;
+      text-align: left;
+      margin: 0.5rem 0 0.2rem;
+      font-weight: bold;
+      color: #555;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 0.6rem;
+      margin-bottom: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    button {
+      width: 100%;
+      padding: 0.8rem;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    button:hover { background: #0056b3; }
+    .card {
+      background: #f9f9f9;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      margin-bottom: 1rem;
+      text-align: left;
+    }
+
+    nav.dashboard-nav {
+      display: flex;
+      justify-content: space-around;
+      margin: 1rem 0;
+    }
+
+    nav.dashboard-nav button {
+      flex: 1;
+      margin: 0 0.3rem;
+      font-size: 0.9rem;
+    }
+
+    .dashboard-section { display: none; }
+    .dashboard-section.active { display: block; }
+
+    .logout {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      display: block;
+      color: #007bff;
+      text-decoration: none;
+    }
+
+    .logout:hover { text-decoration: underline; }
+
+    /* ADMIN panel */
+    .section { margin-top: 2rem; text-align: left; }
+    .flex { display: flex; flex-wrap: wrap; gap: 1rem; }
+    .flex > div { flex: 1 1 300px; }
+    .danger { background: #dc3545; }
+    .danger:hover { background: #a71d2a; }
+  </style>
+</head>
+<body>
+
+<div class="container" id="main-container">
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tab active" onclick="showForm('login')">Iniciar Sesión</div>
+    <div class="tab" onclick="showForm('register')">Registrarse</div>
+  </div>
+
+  <!-- Login -->
+  <div id="login" class="form-section active">
+    <h2>Bienvenido(a)</h2>
+    <form onsubmit="login(event)">
+      <label for="username">Usuario</label>
+      <input type="text" id="username" required>
+      <label for="password">Contraseña</label>
+      <input type="password" id="password" required>
+      <button type="submit">Ingresar</button>
+    </form>
+  </div>
+
+  <!-- Registro -->
+  <div id="register" class="form-section">
+    <h2>Crear Cuenta</h2>
+    <form onsubmit="register(event)">
+      <label for="new_username">Usuario</label>
+      <input type="text" id="new_username" required>
+      <label for="new_password">Contraseña</label>
+      <input type="password" id="new_password" required>
+      <label for="new_role">Tipo de usuario</label>
+      <select id="new_role" required>
+        <option value="">Selecciona...</option>
+        <option value="Estudiante">Estudiante</option>
+        <option value="Docente">Docente</option>
+        <option value="Administrativo">Administrativo</option>
+      </select>
+      <button type="submit">Registrarse</button>
+    </form>
+  </div>
+
+  <!-- Dashboard Estudiante/Docente -->
+  <div id="dashboard" class="dashboard">
+    <h2>¡Hola, <span id="user-name"></span>!</h2>
+    <p>Eres <strong><span id="user-role"></span></strong></p>
+    <nav class="dashboard-nav">
+      <button onclick="showSection('convocatorias')">Convocatorias</button>
+      <button onclick="showSection('postulaciones')">Postulaciones</button>
+      <button onclick="showSection('perfil')">Perfil</button>
+    </nav>
+
+    <div id="convocatorias" class="dashboard-section active">
+      <div id="conv-list"></div>
+    </div>
+
+    <div id="postulaciones" class="dashboard-section">
+      <div class="card">
+        <h3>Mis postulaciones</h3>
+        <ul id="postulacion-lista"></ul>
+      </div>
+    </div>
+
+    <div id="perfil" class="dashboard-section">
+      <div class="card">
+        <h3>Mi Perfil</h3>
+        <label>Nombre completo:</label>
+        <input type="text" id="perfil-nombre">
+        <label>Correo electrónico:</label>
+        <input type="text" id="perfil-correo">
+        <button onclick="guardarPerfil()">Guardar Perfil</button>
+      </div>
+    </div>
+
+    <a href="#" class="logout" onclick="logout()">Cerrar sesión</a>
+  </div>
+
+  <!-- Panel ADMIN -->
+  <div id="admin-panel">
+    <h2>Panel de Administrador - BolsaApp</h2>
+    <div class="section">
+      <h3>Editar Mi Perfil</h3>
+      <input type="text" id="admin-nombre">
+      <input type="email" id="admin-correo">
+      <button onclick="guardarPerfilAdmin()">Guardar Perfil</button>
+    </div>
+    <div class="section">
+      <h3>Crear Convocatoria</h3>
+      <input type="text" id="titulo">
+      <input type="text" id="area">
+      <input type="date" id="fecha">
+      <select id="destinatario">
+        <option value="Estudiante">Solo Estudiantes</option>
+        <option value="Docente">Solo Docentes</option>
+        <option value="Ambos">Ambos</option>
+      </select>
+      <button onclick="crearConvocatoria()">Crear Convocatoria</button>
+    </div>
+    <div class="section">
+      <h3>Lista de Usuarios</h3>
+      <div id="usuarios"></div>
+    </div>
+    <div class="section">
+      <h3>Postulaciones del Sistema</h3>
+      <div id="postulaciones"></div>
+    </div>
+    <a href="#" class="logout" onclick="logout()">Cerrar sesión</a>
+  </div>
+</div>
+
+<script>
+  let currentUser = null;
+
+  function showForm(id) {
+    document.querySelectorAll('.form-section').forEach(f => f.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    event.target.classList.add('active');
+  }
+
+  function register(event) {
+    event.preventDefault();
+    const user = document.getElementById('new_username').value;
+    const pass = document.getElementById('new_password').value;
+    const role = document.getElementById('new_role').value;
+    if (localStorage.getItem(user)) {
+      alert("Este usuario ya existe.");
+    } else {
+      localStorage.setItem(user, JSON.stringify({
+        password: pass, role: role, perfil: {}, postulaciones: []
+      }));
+      alert("Registro exitoso.");
+      showForm('login');
+    }
+  }
+
+  function login(event) {
+    event.preventDefault();
+    const user = document.getElementById('username').value;
+    const pass = document.getElementById('password').value;
+    const data = JSON.parse(localStorage.getItem(user));
+    if (data && data.password === pass) {
+      currentUser = user;
+      if (data.role === "Administrativo") {
+        document.getElementById("main-container").querySelectorAll(".form-section, .tabs").forEach(e => e.style.display = "none");
+        document.getElementById("admin-panel").classList.add("active");
+        document.getElementById("admin-nombre").value = data.perfil.nombre || "";
+        document.getElementById("admin-correo").value = data.perfil.correo || "";
+        cargarUsuarios(); cargarPostulaciones();
+      } else {
+        document.getElementById('user-name').textContent = user;
+        document.getElementById('user-role').textContent = data.role;
+        document.querySelector('.tabs').style.display = 'none';
+        document.querySelectorAll('.form-section').forEach(f => f.style.display = 'none');
+        document.getElementById('dashboard').classList.add('active');
+        cargarConvocatorias(data.role);
+        cargarPerfil();
+        mostrarPostulaciones();
+      }
+    } else {
+      alert("Usuario o contraseña incorrectos.");
+    }
+  }
+
+  function cargarConvocatorias(rol) {
+    const convs = JSON.parse(localStorage.getItem("convocatorias")) || [];
+    const cont = document.getElementById("conv-list");
+    cont.innerHTML = "";
+    convs.forEach(c => {
+      if (c.destino === rol || c.destino === "Ambos") {
+        cont.innerHTML += `
+          <div class="card">
+            <h3>${c.titulo}</h3>
+            <p>Área: ${c.area}</p>
+            <p>Postula hasta: ${c.fecha}</p>
+            <button onclick="postular('${c.titulo}')">Postular</button>
+          </div>`;
+      }
+    });
+  }
+
+  function postular(titulo) {
+    const data = JSON.parse(localStorage.getItem(currentUser));
+    data.postulaciones.push(titulo);
+    localStorage.setItem(currentUser, JSON.stringify(data));
+    mostrarPostulaciones();
+    showSection('postulaciones');
+    alert("Postulación realizada.");
+  }
+
+  function mostrarPostulaciones() {
+    const lista = document.getElementById('postulacion-lista');
+    lista.innerHTML = "";
+    const data = JSON.parse(localStorage.getItem(currentUser));
+    data.postulaciones.forEach(p => {
+      const li = document.createElement("li");
+      li.textContent = p;
+      lista.appendChild(li);
+    });
+  }
+
+  function guardarPerfil() {
+    const data = JSON.parse(localStorage.getItem(currentUser));
+    data.perfil = {
+      nombre: document.getElementById('perfil-nombre').value,
+      correo: document.getElementById('perfil-correo').value
+    };
+    localStorage.setItem(currentUser, JSON.stringify(data));
+    alert("Perfil guardado.");
+  }
+
+  function cargarPerfil() {
+    const data = JSON.parse(localStorage.getItem(currentUser));
+    document.getElementById('perfil-nombre').value = data.perfil.nombre || '';
+    document.getElementById('perfil-correo').value = data.perfil.correo || '';
+  }
+
+  function showSection(id) {
+    document.querySelectorAll('.dashboard-section').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  function guardarPerfilAdmin() {
+    const data = JSON.parse(localStorage.getItem(currentUser));
+    data.perfil.nombre = document.getElementById("admin-nombre").value;
+    data.perfil.correo = document.getElementById("admin-correo").value;
+    localStorage.setItem(currentUser, JSON.stringify(data));
+    alert("Perfil actualizado");
+  }
+
+  function crearConvocatoria() {
+    const titulo = document.getElementById("titulo").value;
+    const area = document.getElementById("area").value;
+    const fecha = document.getElementById("fecha").value;
+    const destino = document.getElementById("destinatario").value;
+    let convs = JSON.parse(localStorage.getItem("convocatorias")) || [];
+    convs.push({ titulo, area, fecha, destino });
+    localStorage.setItem("convocatorias", JSON.stringify(convs));
+    alert("Convocatoria creada");
+  }
+
+  function cargarUsuarios() {
+    const cont = document.getElementById("usuarios");
+    cont.innerHTML = "";
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (["convocatorias"].includes(key)) continue;
+      const u = JSON.parse(localStorage.getItem(key));
+      if (u.role !== "Administrativo") {
+        cont.innerHTML += `
+          <div class="card">
+            <strong>${key}</strong> - ${u.role}<br>
+            Nombre: <input value="${u.perfil?.nombre || ''}" id="nombre-${key}">
+            Correo: <input value="${u.perfil?.correo || ''}" id="correo-${key}">
+            Rol:
+            <select id="rol-${key}">
+              <option ${u.role === 'Estudiante' ? 'selected' : ''}>Estudiante</option>
+              <option ${u.role === 'Docente' ? 'selected' : ''}>Docente</option>
+            </select>
+            <button onclick="guardarUsuario('${key}')">Guardar</button>
+          </div>`;
+      }
+    }
+  }
+
+  function guardarUsuario(user) {
+    const u = JSON.parse(localStorage.getItem(user));
+    u.perfil.nombre = document.getElementById(nombre-{user}).value;
+    u.perfil.correo = document.getElementById(correo-{user}).value;
+    u.role = document.getElementById(rol-{user}).value;
+    localStorage.setItem(user, JSON.stringify(u));
+    alert("Datos actualizados para " + user);
+  }
+
+  function cargarPostulaciones() {
+    const cont = document.getElementById("postulaciones");
+    cont.innerHTML = "";
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      const u = JSON.parse(localStorage.getItem(key));
+      if (u.postulaciones && u.postulaciones.length) {
+        u.postulaciones.forEach((p, idx) => {
+          cont.innerHTML += `
+            <div class="card">
+              <strong>${key}</strong> postuló a <em>${p}</em><br>
+              <button onclick="eliminarPostulacion('${key}', ${idx})" class="danger">Eliminar</button>
+            </div>`;
+        });
+      }
+    }
+  }
+
+  function eliminarPostulacion(user, index) {
+    const u = JSON.parse(localStorage.getItem(user));
+    u.postulaciones.splice(index, 1);
+    localStorage.setItem(user, JSON.stringify(u));
+    cargarPostulaciones();
+  }
+
+  function logout() {
+    location.reload();
+  }
+</script>
+
+</body>
+</html>
